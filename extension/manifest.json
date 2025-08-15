@@ -7,13 +7,14 @@
     "storage"
   ],
   "host_permissions": [
-    "https://listen.tidal.com/*"
+    "https://tidal.com/*"
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://listen.tidal.com/*"
+        "https://tidal.com/*"
       ],
+      "css": ["styles.css"],
       "js": [
         "content.js"
       ],
