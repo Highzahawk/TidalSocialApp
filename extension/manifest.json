@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Tidal Social Overlay",
-  "version": "0.1.0",
-  "description": "Friends feed + collab controls inside listen.tidal.com",
+  "version": "1.0",
+  "description": "A social companion app for Tidal",
   "permissions": [
-    "storage"
+    "activeTab"
   ],
   "host_permissions": [
     "https://tidal.com/*"
@@ -19,6 +19,12 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["Logo.png", "COMPANION.png"],
+      "matches": ["https://tidal.com/*"]
     }
   ]
 }

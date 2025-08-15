@@ -13,7 +13,7 @@
   panel.style.borderLeft = '1px solid rgba(255,255,255,0.08)';
   panel.style.color = '#fff';
   panel.style.fontFamily = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  panel.style.zIndex = '999999';
+  panel.style.zIndex = '1000';
   panel.style.overflow = 'hidden';
   
   // Create the COMPANION UI
@@ -21,13 +21,9 @@
     <div class="companion-header">
       <div class="logo-container">
         <div class="tidal-logo">
-          <div class="logo-circle">
-            <div class="diamond diamond-1"></div>
-            <div class="diamond diamond-2"></div>
-            <div class="diamond diamond-3"></div>
-          </div>
+          <img src="${chrome.runtime.getURL('Logo.png')}" alt="Tidal Logo" class="logo-image">
         </div>
-        <span class="companion-text">COMPANION</span>
+        <img src="${chrome.runtime.getURL('COMPANION.png')}" alt="COMPANION" class="companion-title-image">
       </div>
       
       <div class="nav-tabs">
