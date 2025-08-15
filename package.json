@@ -2,7 +2,7 @@
   "name": "tidal-social",
   "private": true,
   "version": "0.1.0",
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "ypnpm@9.0.0",
   "workspaces": [
     "apps/*",
     "packages/*",

@@ -1,5 +1,6 @@
 import IORedis from 'ioredis';
 import { Queue, Worker, JobsOptions, Job } from 'bullmq';
+import './token-refresh';
 
 const connection = new IORedis(process.env.REDIS_URL!, {
   maxRetriesPerRequest: null,
@@ -28,3 +29,5 @@ export async function enqueueIngest(userId: string, opts: JobsOptions = {}) {
 setInterval(() => {
   console.log('Tick - enqueue users');
 }, 60_000);
+
+console.log('Main worker started');
