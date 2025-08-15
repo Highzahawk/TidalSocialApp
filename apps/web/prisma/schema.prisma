@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  displayName       String?
+  avatarUrl         String?
+  tidalUserId       String   @unique
+  tidalAccessToken  String
+  tidalRefreshToken String
+  tidalExpiresAt    DateTime
+  lastfmUsername    String?
+  lastfmSessionKey  String?
+  isPrivate         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  FollowsFrom       Follow[] @relation("from")
+  FollowsTo         Follow[] @relation("to")
+}
+
+model Follow {
+  id         String   @id @default(cuid())
+  follower   User     @relation("from", fields: [followerId], references: [id])
+  followerId String
+  followee   User     @relation("to", fields: [followeeId], references: [id])
+  followeeId String
+  createdAt  DateTime @default(now())
+  @@unique([followerId, followeeId])
+}
+
+model ListeningEvent {
+  id           String   @id @default(cuid())
+  userId       String
+  artist       String
+  track        String
+  album        String?
+  durationSec  Int?
+  playedAtUtc  DateTime
+  nowPlaying   Boolean  @default(false)
+  tidalTrackId String?
+  rawJson      Json?
+  @@index([userId, playedAtUtc(sort: Desc)])
+  @@unique([userId, artist, track, playedAtUtc])
+}
+
+model CollabRoom {
+  id              String   @id @default(cuid())
+  name            String
+  ownerUserId     String
+  tidalPlaylistId String
+  rulesJson       Json?
+  createdAt       DateTime @default(now())
+}
+
+model CollabMember {
+  id      String @id @default(cuid())
+  roomId  String
+  userId  String
+  role    String // 'owner' | 'member'
+  @@unique([roomId, userId])
+}
+
+model CollabSubmission {
+  id           String   @id @default(cuid())
+  roomId       String
+  userId       String
+  tidalTrackId String
+  status       String   // 'pending' | 'added' | 'rejected'
+  createdAt    DateTime @default(now())
+}
+
+model TrackCache {
+  lookupKey    String   @id
+  tidalTrackId String
+  lastUpdated  DateTime @default(now())
+}

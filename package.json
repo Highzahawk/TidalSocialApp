@@ -1,0 +1,19 @@
+{
+  "name": "tidal-social",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "extension"
+  ],
+  "scripts": {
+    "postinstall": "pnpm -r --filter ./apps/web prisma generate || true",
+    "dev": "pnpm -r -parallel dev",
+    "build": "pnpm -r -parallel build",
+    "start": "pnpm --filter ./apps/web start",
+    "worker": "pnpm --filter ./apps/worker start",
+    "lint": "pnpm -r lint"
+  }
+}

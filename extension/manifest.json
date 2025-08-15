@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Tidal Social Overlay",
+  "version": "0.1.0",
+  "description": "Friends feed + collab controls inside listen.tidal.com",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://listen.tidal.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://listen.tidal.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
