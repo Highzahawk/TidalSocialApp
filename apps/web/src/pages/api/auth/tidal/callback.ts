@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { env } from '../../../../env';
 import { prisma } from '../../../../lib/prisma';
+
+const TIDAL_CLIENT_ID = process.env.TIDAL_CLIENT_ID || 'your-client-id';
+const TIDAL_CLIENT_SECRET = process.env.TIDAL_CLIENT_SECRET || 'your-client-secret';
+const TIDAL_REDIRECT_URI = process.env.TIDAL_REDIRECT_URI || 'http://localhost:3000/api/auth/tidal/callback';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -9,84 +12,80 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { code, state, error } = req.query;
 
+  // Check for OAuth errors
   if (error) {
-    console.error('OAuth error:', error);
-    return res.redirect(`/?error=${encodeURIComponent(error as string)}`);
+    return res.status(400).json({ error: `OAuth error: ${error}` });
   }
 
-  if (!code) {
-    console.error('No authorization code received');
-    return res.redirect('/?error=no_code');
+  if (!code || !state) {
+    return res.status(400).json({ error: 'Missing authorization code or state' });
   }
 
   try {
-    console.log('Starting OAuth callback with code:', code);
-    console.log('Environment check:', {
-      hasClientId: !!env.TIDAL_CLIENT_ID,
-      hasClientSecret: !!env.TIDAL_CLIENT_SECRET,
-      redirectUri: env.TIDAL_REDIRECT_URI
-    });
+    // Verify state parameter (you should implement proper state verification)
+    // const storedState = req.cookies.tidal_oauth_state;
+    // if (state !== storedState) {
+    //   return res.status(400).json({ error: 'Invalid state parameter' });
+    // }
 
     // Exchange authorization code for access token
-    // Use the alternative TIDAL token endpoint
-    const tokenResponse = await fetch('https://api.tidal.com/oauth2/token', {
+    const tokenResponse = await fetch('https://auth.tidal.com/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${Buffer.from(`${TIDAL_CLIENT_ID}:${TIDAL_CLIENT_SECRET}`).toString('base64')}`
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code: code as string,
-        client_id: env.TIDAL_CLIENT_ID,
-        client_secret: env.TIDAL_CLIENT_SECRET,
-        redirect_uri: env.TIDAL_REDIRECT_URI,
-      }),
+        redirect_uri: TIDAL_REDIRECT_URI
+      })
     });
 
-    console.log('Token response status:', tokenResponse.status);
-
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
-      return res.redirect('/?error=token_exchange_failed');
+      const errorData = await tokenResponse.text();
+      console.error('Token exchange failed:', errorData);
+      return res.status(400).json({ error: 'Failed to exchange authorization code for token' });
     }
 
     const tokenData = await tokenResponse.json();
-    console.log('Token response data:', tokenData);
     
-    // Create user data
-    const userData = {
-      id: tokenData.user_id || 'tidal_user_' + Math.random().toString(36).substring(2, 15),
-      username: 'TIDAL User ' + Math.random().toString(36).substring(2, 8)
-    };
-    
-    console.log('Created user data:', userData);
+    // Get user info using the access token
+    const userResponse = await fetch('https://api.tidal.com/v1/users/me', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
 
-    // Save or update user in database
+    if (!userResponse.ok) {
+      console.error('Failed to get user info:', userResponse.status);
+      return res.status(400).json({ error: 'Failed to get user information' });
+    }
+
+    const userData = await userResponse.json();
+
+    // Store or update user in database
     const user = await prisma.user.upsert({
-      where: { tidalUserId: userData.id },
+      where: { tidalUserId: userData.id.toString() },
       update: {
         tidalAccessToken: tokenData.access_token,
         tidalRefreshToken: tokenData.refresh_token,
-        tidalExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
-        displayName: userData.username,
+        tidalExpiresAt: new Date(Date.now() + (tokenData.expires_in * 1000)),
+        displayName: userData.username || userData.firstName
       },
       create: {
-        tidalUserId: userData.id,
+        tidalUserId: userData.id.toString(),
         tidalAccessToken: tokenData.access_token,
         tidalRefreshToken: tokenData.refresh_token,
-        tidalExpiresAt: new Date(Date.now() + tokenData.expires_in * 1000),
-        displayName: userData.username,
-      },
+        tidalExpiresAt: new Date(Date.now() + (tokenData.expires_in * 1000)),
+        displayName: userData.username || userData.firstName
+      }
     });
 
-    console.log('User saved to database:', user.id);
-
-    // Redirect to home page with success
-    res.redirect('/?success=true&user=' + encodeURIComponent(userData.username));
-    
+    // Redirect to success page or dashboard
+    res.redirect('/dashboard?success=true');
   } catch (error) {
     console.error('OAuth callback error:', error);
-    res.redirect('/?error=callback_error');
+    res.status(500).json({ error: 'Failed to complete OAuth flow' });
   }
 }

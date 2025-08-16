@@ -5,6 +5,11 @@
   let panel = null;
   let isPanelOpen = false;
   let currentPanelWidth = 400;
+  
+  // API Configuration
+  const API_BASE = 'http://localhost:3000/api/extension';
+  let currentUser = null;
+  let isAuthenticated = false;
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -13,6 +18,61 @@
     }
   });
   
+  // Authentication and API functions
+  async function checkAuth() {
+    try {
+      const response = await fetch(`${API_BASE}/auth`);
+      if (response.ok) {
+        const data = await response.json();
+        isAuthenticated = data.authenticated;
+        currentUser = data.user;
+        return true;
+      }
+    } catch (error) {
+      console.log('Not authenticated or API not available');
+    }
+    return false;
+  }
+
+  async function fetchFriendsActivity() {
+    try {
+      const response = await fetch(`${API_BASE}/friends-activity`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.friends;
+      }
+    } catch (error) {
+      console.error('Failed to fetch friends activity:', error);
+    }
+    return null;
+  }
+
+  async function fetchPlaylists() {
+    try {
+      const response = await fetch(`${API_BASE}/playlists`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.playlists;
+      }
+    } catch (error) {
+      console.error('Failed to fetch playlists:', error);
+    }
+    return null;
+  }
+
+  async function searchUsers(query) {
+    try {
+      const response = await fetch(`${API_BASE}/search-users?query=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.users;
+      }
+    } catch (error) {
+      console.error('Failed to search users:', error);
+    }
+    return null;
+  }
+
   function togglePanel() {
     if (isPanelOpen) {
       closePanel();
@@ -69,11 +129,14 @@
     applyPageShift(currentPanelWidth);
   }
   
-  function openPanel() {
+  async function openPanel() {
     if (isPanelOpen) return;
     
     // Check if panel already exists
     if (document.getElementById(id)) return;
+
+    // Check authentication first
+    await checkAuth();
 
     // Width & page shift first so layout doesn't jump after insert
     currentPanelWidth = computePanelWidth();
@@ -93,7 +156,7 @@
     panel.style.zIndex = '2147483000'; // high but below devtools
     panel.style.overflow = 'hidden';
     
-    // Create the COMPANION UI
+    // Create the COMPANION UI with loading states
     panel.innerHTML = `
       <div class="companion-header">
         <div class="logo-container">
@@ -126,114 +189,8 @@
         <!-- Friends Tab Content -->
         <div class="tab-content active" id="friends-content">
           <h2 class="section-title">FRIEND ACTIVITY</h2>
-          <div class="friend-activity-list">
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">Now</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">10 Min Ago</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">10 Min Ago</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">10 Min Ago</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">10 Min Ago</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="activity-card">
-              <div class="activity-thumbnail">
-                <div class="album-art-placeholder"></div>
-                <div class="play-button">▶</div>
-              </div>
-              <div class="activity-info">
-                <div class="song-title">HYAENA</div>
-                <div class="artist-name">Travis Scott</div>
-                <div class="timestamp">10 Min Ago</div>
-              </div>
-              <div class="friend-info">
-                <div class="friend-name">adigo</div>
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-              </div>
-            </div>
+          <div class="friend-activity-list" id="friends-activity-list">
+            <div class="loading-state">Loading friend activity...</div>
           </div>
         </div>
         
@@ -249,43 +206,8 @@
               Filter
             </button>
           </div>
-          <div class="playlist-grid">
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
-            <div class="playlist-card">
-              <div class="playlist-cover"></div>
-              <div class="playlist-title">Video Game Music</div>
-              <div class="playlist-creator">adigo</div>
-              <div class="playlist-tracks">67 TRACKS</div>
-            </div>
+          <div class="playlist-grid" id="playlists-grid">
+            <div class="loading-state">Loading playlists...</div>
           </div>
         </div>
         
@@ -297,7 +219,7 @@
           <div class="search-section">
             <div class="search-input-container">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="search-icon">
-                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.01 0 1.99-.25 2.87-.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
               </svg>
               <input type="text" placeholder="Search for friends..." class="search-input" id="friend-search">
             </div>
@@ -307,39 +229,8 @@
           <!-- Current Friends -->
           <div class="friends-section">
             <h3 class="subsection-title">Current Friends</h3>
-            <div class="friends-list">
-              <div class="friend-item">
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-                <div class="friend-details">
-                  <div class="friend-name">adigo</div>
-                  <div class="friend-status">Online</div>
-                </div>
-                <button class="remove-friend-btn" data-username="adigo">Remove</button>
-              </div>
-              
-              <div class="friend-item">
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-                <div class="friend-details">
-                  <div class="friend-name">musiclover</div>
-                  <div class="friend-status">Listening to Travis Scott</div>
-                </div>
-                <button class="remove-friend-btn" data-username="musiclover">Remove</button>
-              </div>
-              
-              <div class="friend-item">
-                <div class="friend-avatar">
-                  <div class="avatar-placeholder"></div>
-                </div>
-                <div class="friend-details">
-                  <div class="friend-name">playlist_creator</div>
-                  <div class="friend-status">Offline</div>
-                </div>
-                <button class="remove-friend-btn" data-username="playlist_creator">Remove</button>
-              </div>
+            <div class="friends-list" id="current-friends-list">
+              <div class="loading-state">Loading friends...</div>
             </div>
           </div>
           
@@ -400,7 +291,7 @@
           <div class="user-avatar">
             <div class="avatar-placeholder"></div>
           </div>
-          <span class="user-name">adigo</span>
+          <span class="user-name" id="user-name">${isAuthenticated ? (currentUser?.username || 'User') : 'Not logged in'}</span>
         </div>
         <button class="menu-btn">⋯</button>
       </div>
@@ -412,9 +303,124 @@
     document.body.appendChild(panel);
     isPanelOpen = true;
     
-    // Add event listeners
+    // Load data and setup event listeners
+    await loadInitialData();
     setupEventListeners();
     window.addEventListener('resize', handleResize);
+  }
+  
+  async function loadInitialData() {
+    if (!isAuthenticated) {
+      showAuthMessage();
+      return;
+    }
+
+    // Load friends activity
+    await loadFriendsActivity();
+    
+    // Load playlists
+    await loadPlaylists();
+    
+    // Load current friends
+    await loadCurrentFriends();
+  }
+
+  async function loadFriendsActivity() {
+    const container = panel.querySelector('#friends-activity-list');
+    if (!container) return;
+
+    const friends = await fetchFriendsActivity();
+    if (friends && friends.length > 0) {
+      container.innerHTML = friends.map(friend => `
+        <div class="activity-card">
+          <div class="activity-thumbnail">
+            ${friend.currentTrack?.albumArt ? 
+              `<img src="${friend.currentTrack.albumArt}" alt="Album Art" class="album-art">` :
+              `<div class="album-art-placeholder"></div>`
+            }
+            <div class="play-button">▶</div>
+          </div>
+          <div class="activity-info">
+            <div class="song-title">${friend.currentTrack?.title || 'No track playing'}</div>
+            <div class="artist-name">${friend.currentTrack?.artist || 'Unknown'}</div>
+            <div class="timestamp">${friend.currentTrack?.timestamp || 'Offline'}</div>
+          </div>
+          <div class="friend-info">
+            <div class="friend-name">${friend.username}</div>
+            <div class="friend-avatar">
+              ${friend.avatar ? 
+                `<img src="${friend.avatar}" alt="Avatar" class="avatar-image">` :
+                `<div class="avatar-placeholder"></div>`
+              }
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<div class="no-data">No friend activity available</div>';
+    }
+  }
+
+  async function loadPlaylists() {
+    const container = panel.querySelector('#playlists-grid');
+    if (!container) return;
+
+    const playlists = await fetchPlaylists();
+    if (playlists && playlists.length > 0) {
+      container.innerHTML = playlists.map(playlist => `
+        <div class="playlist-card">
+          ${playlist.coverImage ? 
+            `<img src="${playlist.coverImage}" alt="Playlist Cover" class="playlist-cover">` :
+            `<div class="playlist-cover"></div>`
+          }
+          <div class="playlist-title">${playlist.title}</div>
+          <div class="playlist-creator">${playlist.creator}</div>
+          <div class="playlist-tracks">${playlist.trackCount} TRACKS</div>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<div class="no-data">No playlists available</div>';
+    }
+  }
+
+  async function loadCurrentFriends() {
+    const container = panel.querySelector('#current-friends-list');
+    if (!container) return;
+
+    // For now, use the same data as friends activity
+    const friends = await fetchFriendsActivity();
+    if (friends && friends.length > 0) {
+      container.innerHTML = friends.map(friend => `
+        <div class="friend-item">
+          <div class="friend-avatar">
+            ${friend.avatar ? 
+              `<img src="${friend.avatar}" alt="Avatar" class="avatar-image">` :
+              `<div class="avatar-placeholder"></div>`
+            }
+          </div>
+          <div class="friend-details">
+            <div class="friend-name">${friend.username}</div>
+            <div class="friend-status">${friend.status}</div>
+          </div>
+          <button class="remove-friend-btn" data-username="${friend.username}">Remove</button>
+        </div>
+      `).join('');
+    } else {
+      container.innerHTML = '<div class="no-data">No friends added yet</div>';
+    }
+  }
+
+  function showAuthMessage() {
+    const content = panel.querySelector('.companion-content');
+    if (content) {
+      content.innerHTML = `
+        <div class="auth-message">
+          <h2>Please Log In</h2>
+          <p>You need to be logged into Tidal Companion to use this extension.</p>
+          <a href="http://localhost:3000/login" target="_blank" class="btn btn-primary">Go to Login</a>
+        </div>
+      `;
+    }
   }
   
   function closePanel() {
@@ -477,32 +483,31 @@
     // Friends list functionality
     const friendSearch = panel.querySelector('#friend-search');
     const addFriendBtn = panel.querySelector('#add-friend-btn');
-    const removeFriendBtns = panel.querySelectorAll('.remove-friend-btn');
     
     // Search functionality
-    friendSearch?.addEventListener('input', (e) => {
+    friendSearch?.addEventListener('input', async (e) => {
       const searchTerm = e.target.value.trim();
       if (searchTerm.length > 0) {
-        performFriendSearch(searchTerm);
+        await performFriendSearch(searchTerm);
       } else {
         hideSearchResults();
       }
     });
     
     // Add friend button
-    addFriendBtn?.addEventListener('click', () => {
+    addFriendBtn?.addEventListener('click', async () => {
       const searchTerm = friendSearch.value.trim();
       if (searchTerm.length > 0) {
-        addFriend(searchTerm);
+        await addFriend(searchTerm);
       }
     });
     
-    // Remove friend buttons
-    removeFriendBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    // Remove friend buttons (delegated event handling)
+    panel.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('remove-friend-btn')) {
         const username = e.target.dataset.username;
-        removeFriend(username);
-      });
+        await removeFriend(username);
+      }
     });
     
     // Close overlay
@@ -520,27 +525,28 @@
   }
   
   // Friend management functions
-  function performFriendSearch(searchTerm) {
-    // Simulate search results - in real app, this would call an API
-    const mockResults = [
-      { username: searchTerm + '_user1', status: 'Online' },
-      { username: searchTerm + '_user2', status: 'Listening to music' },
-      { username: searchTerm + '_user3', status: 'Offline' }
-    ];
-    
-    displaySearchResults(mockResults);
+  async function performFriendSearch(searchTerm) {
+    const users = await searchUsers(searchTerm);
+    if (users && users.length > 0) {
+      displaySearchResults(users);
+    } else {
+      hideSearchResults();
+    }
   }
   
-  function displaySearchResults(results) {
+  function displaySearchResults(users) {
     const searchResults = panel.querySelector('#search-results');
     const searchResultsList = panel.querySelector('#search-results-list');
     
     if (!searchResults || !searchResultsList) return;
     
-    searchResultsList.innerHTML = results.map(user => `
+    searchResultsList.innerHTML = users.map(user => `
       <div class="search-result-item">
         <div class="friend-avatar">
-          <div class="avatar-placeholder"></div>
+          ${user.avatar ? 
+            `<img src="${user.avatar}" alt="Avatar" class="avatar-image">` :
+            `<div class="avatar-placeholder"></div>`
+          }
         </div>
         <div class="friend-details">
           <div class="friend-name">${user.username}</div>
@@ -553,9 +559,9 @@
     // Add event listeners to new add buttons
     const addButtons = searchResultsList.querySelectorAll('.add-friend-result-btn');
     addButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         const username = e.target.dataset.username;
-        addFriend(username);
+        await addFriend(username);
       });
     });
     
@@ -569,8 +575,8 @@
     }
   }
   
-  function addFriend(username) {
-    // In real app, this would call an API to add friend
+  async function addFriend(username) {
+    // In a real implementation, this would call an API to add friend
     console.log(`Adding friend: ${username}`);
     
     // Clear search
@@ -580,21 +586,21 @@
     }
     hideSearchResults();
     
-    // Show success message (you could add a toast notification here)
+    // Show success message
     alert(`Friend request sent to ${username}!`);
+    
+    // Refresh friends list
+    await loadCurrentFriends();
   }
   
-  function removeFriend(username) {
-    // In real app, this would call an API to remove friend
+  async function removeFriend(username) {
+    // In a real implementation, this would call an API to remove friend
     console.log(`Removing friend: ${username}`);
-    
-    // Remove from UI
-    const friendItem = panel.querySelector(`[data-username="${username}"]`).closest('.friend-item');
-    if (friendItem) {
-      friendItem.remove();
-    }
     
     // Show success message
     alert(`${username} removed from friends list!`);
+    
+    // Refresh friends list
+    await loadCurrentFriends();
   }
 })();

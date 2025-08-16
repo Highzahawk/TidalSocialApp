@@ -9,11 +9,12 @@
     "extension"
   ],
   "scripts": {
-    "postinstall": "pnpm -r --filter ./apps/web prisma generate || true",
-    "dev": "pnpm -r -parallel dev",
-    "build": "pnpm -r -parallel build",
-    "start": "pnpm --filter ./apps/web start",
-    "worker": "pnpm --filter ./apps/worker start",
-    "lint": "pnpm -r lint"
+    "postinstall": "npm run prisma:generate",
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "start": "npm run start --workspace=apps/web",
+    "worker": "npm run start --workspace=apps/worker",
+    "lint": "npm run lint --workspaces",
+    "prisma:generate": "cd apps/web && npm run prisma generate"
   }
 }
