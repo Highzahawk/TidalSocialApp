@@ -12,28 +12,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Store state in session or database (for now, we'll use a simple approach)
   // In production, you'd want to store this securely
   
-  // Build the TIDAL OAuth URL
-  // Try with minimal scopes first to avoid permission issues
+  // Build the TIDAL OAuth URL using correct environment variables
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: env.TIDAL_CLIENT_ID,
     redirect_uri: env.TIDAL_REDIRECT_URI,
-    scope: 'user.read', // Start with minimal scope
+    scope: 'user.read collection.read search.read playlists.write playlists.read', // Scopes from your portal
     state: state
   });
 
-  // Try different OAuth endpoint paths - let's try the most common variations
-  const possibleEndpoints = [
-    'https://auth.tidal.com/oauth/authorize',
-    'https://auth.tidal.com/auth/authorize',
-    'https://auth.tidal.com/connect/authorize',
-    'https://api.tidal.com/oauth/authorize',
-    'https://api.tidal.com/auth/authorize',
-    'https://api.tidal.com/connect/authorize'
-  ];
-
-  // Try the first one for now
-  const authUrl = `${possibleEndpoints[0]}?${params.toString()}`;
+  // Use the correct auth URL from environment
+  const authUrl = `${env.TIDAL_AUTH_URL}?${params.toString()}`;
+  
+  console.log('=== TIDAL OAUTH DEBUG ===');
+  console.log('Auth URL:', authUrl);
+  console.log('Client ID:', env.TIDAL_CLIENT_ID);
+  console.log('Redirect URI:', env.TIDAL_REDIRECT_URI);
+  console.log('========================');
   
   // Redirect to TIDAL's OAuth page
   res.redirect(authUrl);

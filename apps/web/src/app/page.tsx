@@ -83,10 +83,10 @@ export default function Home() {
             </div>
           ) : (
             <button
-              onClick={() => window.location.href = '/api/auth/tidal/authorize'}
+              onClick={() => window.location.href = '/api/auth/tidal/authorize-pkce'}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
             >
-              Connect TIDAL
+              Connect TIDAL (PKCE)
             </button>
           )}
         </div>

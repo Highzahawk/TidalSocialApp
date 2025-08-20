@@ -20,15 +20,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    console.log('Starting OAuth callback with code:', code);
-    console.log('Environment check:', {
-      hasClientId: !!env.TIDAL_CLIENT_ID,
-      hasClientSecret: !!env.TIDAL_CLIENT_SECRET,
-      redirectUri: env.TIDAL_REDIRECT_URI
-    });
+    // Get code verifier from cookie
+    const cookies = req.headers.cookie?.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>) || {};
 
-    // Exchange authorization code for access token
-    // Try TIDAL's alternative token exchange format
+    const codeVerifier = cookies.tidal_code_verifier;
+    if (!codeVerifier) {
+      console.error('Code verifier not found in cookies');
+      return res.redirect('/?error=missing_code_verifier');
+    }
+
+    console.log('Starting PKCE OAuth callback with code:', code);
+    console.log('Code verifier found:', !!codeVerifier);
+
+    // Exchange authorization code for access token using PKCE
     const tokenResponse = await fetch(env.TIDAL_TOKEN_URL, {
       method: 'POST',
       headers: {
@@ -38,9 +46,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: env.TIDAL_CLIENT_ID,
-        client_secret: env.TIDAL_CLIENT_SECRET,
         code: code as string,
         redirect_uri: env.TIDAL_REDIRECT_URI,
+        code_verifier: codeVerifier, // PKCE parameter
       }),
     });
 
@@ -60,9 +68,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tokenData = await tokenResponse.json();
     console.log('Token response data:', tokenData);
     
-    // Create user data
+    // Clear the code verifier cookie
+    res.setHeader('Set-Cookie', 'tidal_code_verifier=; HttpOnly; Path=/; Max-Age=0');
+
+    // Create user data - convert user_id to string for Prisma
     const userData = {
-      id: tokenData.user_id || 'tidal_user_' + Math.random().toString(36).substring(2, 15),
+      id: String(tokenData.user_id) || 'tidal_user_' + Math.random().toString(36).substring(2, 15),
       username: 'TIDAL User ' + Math.random().toString(36).substring(2, 8)
     };
     

@@ -26,10 +26,11 @@ export interface TidalPlaylist {
 
 export class TidalAPI {
   private accessToken: string;
-  private baseUrl = 'https://api.tidal.com/v1';
+  private baseUrl: string;
 
-  constructor(accessToken: string) {
+  constructor(accessToken: string, baseUrl = 'https://api.tidal.com/v1') {
     this.accessToken = accessToken;
+    this.baseUrl = baseUrl;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -88,5 +89,7 @@ export class TidalAPI {
 
 // Helper function to create TidalAPI instance from session
 export function createTidalAPI(accessToken: string): TidalAPI {
-  return new TidalAPI(accessToken);
+  // Use environment variable for base URL if available
+  const baseUrl = process.env.TIDAL_API_BASE || 'https://api.tidal.com/v1';
+  return new TidalAPI(accessToken, baseUrl);
 }
