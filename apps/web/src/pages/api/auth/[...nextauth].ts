@@ -1,61 +1,46 @@
 import NextAuth from 'next-auth';
 import type { NextAuthOptions } from 'next-auth';
-import { prisma } from '../../../lib/prisma';
 import { env } from '../../../env';
 
-// Using credentials provider for now - we'll implement full OAuth later
-import CredentialsProvider from 'next-auth/providers/credentials';
-
 export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      id: 'tidal',
-      name: 'TIDAL',
-      credentials: {
-        username: { label: 'TIDAL Username', type: 'text' },
-        accessToken: { label: 'Access Token', type: 'text' }
-      },
-      async authorize(credentials) {
-        if (!credentials?.username) return null;
-        
-        // For now, create a mock user - we'll implement real OAuth later
-        const user = await prisma.user.upsert({
-          where: { tidalUserId: credentials.username },
-          update: {
-            tidalAccessToken: credentials.accessToken || 'dev-token',
-            tidalRefreshToken: 'dev-refresh',
-            tidalExpiresAt: new Date(Date.now() + 3600_000)
-          },
-          create: {
-            tidalUserId: credentials.username,
-            tidalAccessToken: credentials.accessToken || 'dev-token',
-            tidalRefreshToken: 'dev-refresh',
-            tidalExpiresAt: new Date(Date.now() + 3600_000),
-            displayName: credentials.username
-          }
-        });
-        
-        return { 
-          id: user.id, 
-          name: user.displayName ?? user.tidalUserId,
-          email: `${user.tidalUserId}@tidal.com`
-        } as any;
-      }
-    })
-  ],
+  providers: [],
   callbacks: {
-    async jwt({ token, user }) {
-      // For credentials provider, user data is available on first sign in
+    async jwt({ token, user, account }) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('JWT callback - token:', token);
+        console.log('JWT callback - user:', user);
+        console.log('JWT callback - account:', account);
+      }
+      
+      // Handle our custom JWT structure
+      if (token.tidalUserId && token.accessToken) {
+        // This is our custom JWT from TIDAL OAuth
+        return token;
+      }
+      
       if (user) {
-        token.tidalUserId = user.name; // Using name as TIDAL user ID for now
-        token.accessToken = 'dev-token';
+        token.tidalUserId = (user as any).tidalUserId;
+        token.sub = user.id;
+      }
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token;
       }
       return token;
     },
     async session({ session, token }) {
-      // Send properties to the client
-      session.accessToken = token.accessToken;
-      session.tidalUserId = token.tidalUserId;
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Session callback - session:', session);
+        console.log('Session callback - token:', token);
+      }
+      
+      if (session.user) {
+        (session.user as any).id = token.sub as string;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+      }
+      (session as any).accessToken = token.accessToken;
+      (session as any).tidalUserId = token.tidalUserId;
       return session;
     }
   },

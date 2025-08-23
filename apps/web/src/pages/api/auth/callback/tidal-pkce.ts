@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { env } from '../../../../env';
 import { prisma } from '../../../../lib/prisma';
+import { encode } from 'next-auth/jwt';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -71,10 +72,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Clear the code verifier cookie
     res.setHeader('Set-Cookie', 'tidal_code_verifier=; HttpOnly; Path=/; Max-Age=0');
 
-    // Create user data - convert user_id to string for Prisma
+    // Create user data with consistent display name based on user ID
     const userData = {
-      id: String(tokenData.user_id) || 'tidal_user_' + Math.random().toString(36).substring(2, 15),
-      username: 'TIDAL User ' + Math.random().toString(36).substring(2, 8)
+      id: String(tokenData.user_id),
+      username: `Music Lover ${tokenData.user_id}`  // You can customize this
     };
     
     console.log('Created user data:', userData);
@@ -99,8 +100,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log('User saved to database:', user.id);
 
-    // Redirect to home page with success
-    res.redirect('/?success=true&user=' + encodeURIComponent(userData.username));
+    // Create NextAuth-compatible JWT using NextAuth's encode function
+    const sessionToken = await encode({
+      token: {
+        sub: user.id,
+        name: user.displayName,
+        email: `${user.tidalUserId}@tidal.com`,
+        tidalUserId: user.tidalUserId,
+        accessToken: tokenData.access_token,
+      },
+      secret: env.NEXTAUTH_SECRET,
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    });
+
+    // Set NextAuth session cookie directly
+    const cookieName = 'next-auth.session-token';
+    const cookieOptions = `${cookieName}=${sessionToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`;
+
+    res.setHeader('Set-Cookie', cookieOptions);
+    
+    console.log('Session cookie set, redirecting to home');
+    res.redirect('/');
     
   } catch (error) {
     console.error('OAuth callback error:', error);
