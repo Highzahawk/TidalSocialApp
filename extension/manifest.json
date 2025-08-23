@@ -1,14 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "Tidal Social Overlay",
-  "version": "0.1.0",
-  "description": "Friends feed + collab controls inside listen.tidal.com",
+  "name": "Tidal Social",
+  "version": "1.0.0",
+  "description": "See what your friends are listening to on TIDAL in real-time",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab",
+    "notifications"
   ],
   "host_permissions": [
-    "https://listen.tidal.com/*"
+    "https://listen.tidal.com/*",
+    "http://localhost:3000/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -17,7 +23,14 @@
       "js": [
         "content.js"
       ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Tidal Social"
+  }
 }

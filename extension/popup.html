@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tidal Social</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="header-info">
+        <h1 class="popup-title">Tidal Social</h1>
+        <div class="connection-status">
+          <div class="status-dot" id="status-dot"></div>
+          <span class="status-text" id="status-text">Connecting...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div class="auth-section" id="auth-section">
+      <div class="auth-content">
+        <div class="auth-icon">🎵</div>
+        <h2>Connect to Tidal Social</h2>
+        <p>Sign in to see what your friends are listening to and share your music activity.</p>
+        <button class="auth-button" id="auth-button">
+          <span>Sign in with TIDAL</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content (Hidden until authenticated) -->
+    <div class="main-content" id="main-content" style="display: none;">
+      
+      <!-- Tab Navigation -->
+      <div class="tab-nav">
+        <button class="tab-button active" data-tab="activity">Activity</button>
+        <button class="tab-button" data-tab="friends">Friends</button>
+        <button class="tab-button" data-tab="settings">Settings</button>
+      </div>
+
+      <!-- Activity Tab -->
+      <div class="tab-content active" id="activity-tab">
+        <div class="now-playing-section">
+          <div class="section-header">
+            <h3>Now Playing</h3>
+            <div class="playing-indicator" id="playing-indicator"></div>
+          </div>
+          <div class="now-playing-card" id="now-playing-card">
+            <div class="track-info">
+              <div class="track-title" id="current-track">Not playing</div>
+              <div class="track-artist" id="current-artist"></div>
+              <div class="track-album" id="current-album"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="friends-activity-section">
+          <div class="section-header">
+            <h3>Friends Activity</h3>
+            <button class="refresh-button" id="refresh-activity" title="Refresh">⟳</button>
+          </div>
+          <div class="activity-list" id="activity-list">
+            <div class="loading">Loading activity...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Friends Tab -->
+      <div class="tab-content" id="friends-tab">
+        <div class="friends-section">
+          <div class="section-header">
+            <h3>Your Friends</h3>
+            <button class="add-friend-button" id="add-friend-button">+ Add</button>
+          </div>
+          <div class="friends-list" id="friends-list">
+            <div class="empty-state">
+              <div class="empty-icon">👥</div>
+              <p>No friends yet</p>
+              <p class="empty-subtitle">Add friends to see their music activity</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Friend Modal -->
+        <div class="add-friend-modal" id="add-friend-modal" style="display: none;">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Add Friend</h3>
+              <button class="modal-close" id="close-modal">×</button>
+            </div>
+            <div class="modal-body">
+              <label for="friend-username">TIDAL Username</label>
+              <input type="text" id="friend-username" placeholder="Enter username" />
+              <div class="modal-buttons">
+                <button class="button-secondary" id="cancel-add">Cancel</button>
+                <button class="button-primary" id="confirm-add">Add Friend</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="tab-content" id="settings-tab">
+        <div class="settings-section">
+          <div class="section-header">
+            <h3>Settings</h3>
+          </div>
+          
+          <div class="setting-group">
+            <div class="setting-item">
+              <label class="setting-label">
+                <input type="checkbox" id="notifications-enabled" checked>
+                <span class="checkmark"></span>
+                Enable notifications
+              </label>
+              <p class="setting-description">Get notified when friends start listening to music</p>
+            </div>
+
+            <div class="setting-item">
+              <label class="setting-label">
+                <input type="checkbox" id="sharing-enabled" checked>
+                <span class="checkmark"></span>
+                Share your activity
+              </label>
+              <p class="setting-description">Let friends see what you're listening to</p>
+            </div>
+
+            <div class="setting-item">
+              <label class="setting-label">
+                <input type="checkbox" id="overlay-enabled" checked>
+                <span class="checkmark"></span>
+                Show overlay on TIDAL
+              </label>
+              <p class="setting-description">Display social widget on TIDAL website</p>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="setting-item">
+              <div class="setting-header">
+                <span class="setting-title">Account</span>
+              </div>
+              <div class="account-info" id="account-info">
+                <div class="account-name" id="account-name">Loading...</div>
+                <div class="account-id" id="account-id"></div>
+              </div>
+              <button class="button-secondary" id="sign-out-button">Sign Out</button>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="version-info">
+              <span>Tidal Social Extension v1.0.0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
