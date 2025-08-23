@@ -69,14 +69,54 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const tokenData = await tokenResponse.json();
     console.log('Token response data:', tokenData);
     
+    // Decode the access token to see what scopes we actually got
+    if (tokenData.access_token) {
+      try {
+        const tokenParts = tokenData.access_token.split('.');
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+        console.log('=== ACCESS TOKEN PAYLOAD ===');
+        console.log('Scopes granted:', payload.scope);
+        console.log('Full payload:', payload);
+      } catch (e) {
+        console.log('Could not decode access token:', e.message);
+      }
+    }
+    
     // Clear the code verifier cookie
     res.setHeader('Set-Cookie', 'tidal_code_verifier=; HttpOnly; Path=/; Max-Age=0');
 
-    // Create user data with consistent display name based on user ID
-    const userData = {
+    // Try to get real user info from TIDAL OpenAPI v2
+    let userData = {
       id: String(tokenData.user_id),
-      username: `Music Lover ${tokenData.user_id}`  // You can customize this
+      username: `Music Lover ${tokenData.user_id}`
     };
+    
+    try {
+      console.log('=== GETTING REAL TIDAL USER INFO ===');
+      const userInfoResponse = await fetch(`https://openapi.tidal.com/v2/users/me`, {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+          'Accept': 'application/vnd.api+json',
+        },
+      });
+      
+      if (userInfoResponse.ok) {
+        const userInfo = await userInfoResponse.json();
+        console.log('✅ GOT REAL USER INFO:', JSON.stringify(userInfo, null, 2));
+        
+        const attrs = userInfo.data?.attributes;
+        if (attrs) {
+          userData.username = attrs.firstName ? 
+            `${attrs.firstName} ${attrs.lastName || ''}`.trim() :
+            attrs.username || `Music Lover ${tokenData.user_id}`;
+          console.log('🎉 Using real name:', userData.username);
+        }
+      } else {
+        console.log('❌ Failed to get user info, using fallback');
+      }
+    } catch (error) {
+      console.log('❌ Exception getting user info:', error.message);
+    }
     
     console.log('Created user data:', userData);
 
