@@ -3,14 +3,16 @@
 ## Project Overview
 A social music platform built around TIDAL streaming with collaborative playlists and friend activity feeds. Users can track listening habits, follow friends, and see real-time music activity.
 
-## Current Status: ✅ TIDAL OAuth Working!
+## Current Status: ✅ NextAuth + TIDAL OAuth Complete!
 
 ### What's Implemented & Working:
-- ✅ **TIDAL OAuth with PKCE flow** - Full authentication working
-- ✅ **User management** - Login/logout, database storage
+- ✅ **TIDAL OAuth with PKCE flow** - Full authentication working  
+- ✅ **NextAuth.js integration** - Persistent sessions across browser restarts
+- ✅ **User management** - Login/logout, database storage with consistent usernames
 - ✅ **Database schema** - PostgreSQL with Prisma (Users, ListeningEvents, Follows, CollabRooms)
-- ✅ **Basic web app** - Next.js frontend with friend feed (sample data)
+- ✅ **Clean web app** - Next.js frontend, single sign-in button, friend feed (sample data)
 - ✅ **Environment setup** - All TIDAL credentials configured
+- ✅ **TypeScript errors fixed** - Production-ready code with proper error handling
 
 ### Key Technical Decisions Made:
 - **Authentication**: TIDAL OAuth 2.1 with PKCE (not standard OAuth)
@@ -20,10 +22,11 @@ A social music platform built around TIDAL streaming with collaborative playlist
 - **Database**: tidalUserId stored as String (TIDAL returns number, converted)
 
 ### Working Endpoints:
-- `/api/auth/tidal/authorize-pkce` - PKCE OAuth initiation
-- `/api/auth/callback/tidal-pkce` - OAuth callback handler
+- `/api/auth/signin-tidal` - PKCE OAuth initiation (production endpoint)
+- `/api/auth/callback/tidal-pkce` - OAuth callback with NextAuth session + real user data
+- `/api/auth/[...nextauth]` - NextAuth configuration for persistent sessions
 - `/api/feed` - Friend activity feed (sample data)
-- `/api/auth/tidal/test-credentials` - Credential validation
+- `/api/debug/session` - Session debugging endpoint (can be removed in production)
 
 ## Major Problems Solved:
 
@@ -42,6 +45,20 @@ A social music platform built around TIDAL streaming with collaborative playlist
 **Problem**: TIDAL returns user_id as number, schema expects string
 **Solution**: Added String() conversion in callback
 
+### 4. Session Persistence Issues
+**Problem**: User signed out on page refresh, duplicate login buttons
+**Solution**: 
+- Integrated NextAuth.js with custom TIDAL OAuth flow
+- Used NextAuth's `encode()` function for proper JWT signing
+- Removed duplicate buttons, clean UI with persistent sessions
+
+### 5. TIDAL API Access Limitations
+**Problem**: TIDAL API requires `r_usr` scope for user data, but causes OAuth error 1002
+**Solution**: 
+- Discovered app registration only supports basic scopes (`user.read collection.read playlists.read`)
+- TIDAL API returns 403/404 for most user data endpoints
+- **Resolution**: Chrome extension approach is the correct path for real music data
+
 ## Current Environment (.env):
 ```
 TIDAL_CLIENT_ID=Y7zLc6Mj5CW9OMlS
@@ -52,12 +69,14 @@ TIDAL_TOKEN_URL=https://auth.tidal.com/v1/oauth2/token
 TIDAL_API_BASE=https://api.tidal.com/v1
 ```
 
-## Next Phase: Chrome Extension for Real Listening Data
+## Next Phase: Chrome Extension for Real Listening Data (CRITICAL PATH)
 
-### Why Extension is Needed:
-- **TIDAL API limitation**: No "now playing" or listening history endpoints
-- **Social features require real data**: Current feed shows sample data only
-- **Extension can monitor TIDAL web player**: Extract real-time listening activity
+### Why Extension is Required (Not Optional):
+- **TIDAL API severely limited**: Basic scopes don't provide access to user music data
+- **r_usr scope blocked**: App registration doesn't support required scope for playlists/favorites
+- **All user endpoints return 403**: Cannot access personal music data via API
+- **Extension = Primary data source**: DOM scraping is the only viable approach
+- **TIDAL OAuth still valuable**: Provides user identity verification for social features
 
 ### Planned Extension Features:
 1. **Personal Tracker** (Phase 1)
@@ -111,6 +130,24 @@ npm run dev  # Start development server
 # Visit http://localhost:3000
 # Click "Connect TIDAL (PKCE)" to test auth
 ```
+
+## Session Summary & Current State (Aug 2025):
+
+### ✅ Authentication System: COMPLETE
+- TIDAL OAuth + NextAuth.js working perfectly
+- Persistent sessions across browser sessions
+- Clean UI with single sign-in button
+- Production-ready error handling
+- User displays as "Azhan Zaheer" (real name from TIDAL profile)
+
+### ✅ TIDAL API Integration: BREAKTHROUGH!
+- **MAJOR DISCOVERY**: `https://openapi.tidal.com/v2/users/me` works with basic scopes
+- Real user data accessible: firstName, lastName, email, country
+- User displays as "Azhan Zaheer" instead of generic username
+- Standard API endpoints still blocked, but profile data works perfectly
+
+### 🎯 Chrome Extension Still Critical for Music Data
+Profile data works, but playlist/listening data still requires extension approach for social features.
 
 ## Next Session Goals:
 1. Start Chrome extension development
