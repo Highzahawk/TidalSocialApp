@@ -142,18 +142,55 @@ npm run dev  # Start development server
 
 ### ✅ TIDAL API Integration: BREAKTHROUGH!
 - **MAJOR DISCOVERY**: `https://openapi.tidal.com/v2/users/me` works with basic scopes
-- Real user data accessible: firstName, lastName, email, country
+- Real user data accessible: firstName, lastName, email, country, username  
 - User displays as "Azhan Zaheer" instead of generic username
 - Standard API endpoints still blocked, but profile data works perfectly
+- **Key Fix**: Used OpenAPI v2 endpoint instead of standard API v1
+- **Working API call**: GET `https://openapi.tidal.com/v2/users/me` with `Accept: application/vnd.api+json`
 
 ### 🎯 Chrome Extension Still Critical for Music Data
 Profile data works, but playlist/listening data still requires extension approach for social features.
 
+## Data Storage Strategy (Ready to Implement):
+
+### Database Schema Already Perfect:
+```sql
+ListeningEvent {
+  userId       String    -- TIDAL user ID (204918363) 
+  artist       String    -- "John Mayer"
+  track        String    -- "Gravity"
+  album        String?   -- "Continuum"  
+  playedAtUtc  DateTime  -- When they played it
+  nowPlaying   Boolean   -- true for current song
+  tidalTrackId String?   -- If available from DOM
+}
+```
+
+### Data Flow Architecture:
+1. **Chrome Extension** monitors `listen.tidal.com` DOM 
+2. **Extracts** track info (artist, song, album) from player elements
+3. **Sends to API** `/api/listening-events` (needs to be created)
+4. **Stored in database** with `nowPlaying: true`
+5. **Friends see** "Azhan Zaheer is listening to Gravity by John Mayer"
+
 ## Next Session Goals:
-1. Start Chrome extension development
-2. Implement TIDAL web player monitoring
-3. Build WebSocket real-time system
-4. Create basic friend system
+1. **Chrome Extension Development** (Priority 1)
+   - Content script to monitor TIDAL web player DOM
+   - Extract real-time listening data from page elements
+   - Send data to server API endpoint
+
+2. **Server API Endpoints** (Priority 2)  
+   - `/api/listening-events` - Receive music data from extension
+   - `/api/friends` - Friend system endpoints
+   - Real-time activity feed with actual listening data
+
+3. **WebSocket System** (Priority 3)
+   - Real-time updates for friend activity
+   - Live "now playing" status
+
+4. **Friend System** (Priority 4)
+   - Add/follow friends by TIDAL username
+   - Privacy controls
 
 ## Resources:
 - TIDAL Developer Portal: developer.tidal.com
