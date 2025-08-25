@@ -1,0 +1,397 @@
+/* Tidal Social Extension - Teleparty-Style Side Panel */
+
+/* Toggle Button - Always visible on right edge */
+.tidal-social-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 60px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.2);
+}
+
+.tidal-social-toggle:hover {
+  background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%);
+  transform: translateY(-50%) translateX(-2px);
+  box-shadow: -6px 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.tidal-social-toggle.panel-open {
+  border-radius: 0;
+  background: rgba(0, 212, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+}
+
+/* Side Panel - Slides in from right */
+.tidal-social-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 999998;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tidal-social-panel.panel-open {
+  transform: translateX(0);
+}
+
+/* Panel Header */
+.tidal-social-panel .panel-header {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.tidal-social-panel .header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.tidal-social-panel .header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tidal-social-panel .user-greeting {
+  opacity: 0.8;
+}
+
+.tidal-social-panel .greeting-text {
+  font-size: 12px;
+  color: #00d4ff;
+  font-weight: 500;
+}
+
+.tidal-social-panel #user-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.tidal-social-panel .panel-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.tidal-social-panel .connection-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tidal-social-panel .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+  transition: background-color 0.3s ease;
+}
+
+.tidal-social-panel .status-dot.connected {
+  background: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.tidal-social-panel .status-dot.playing {
+  background: #00d4ff;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+.tidal-social-panel .status-text {
+  font-size: 11px;
+  color: #aaa;
+}
+
+/* Authentication Section */
+.tidal-social-panel .auth-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.tidal-social-panel .auth-content {
+  text-align: center;
+  max-width: 280px;
+}
+
+.tidal-social-panel .auth-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.tidal-social-panel .auth-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.tidal-social-panel .auth-content p {
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.4;
+  margin-bottom: 24px;
+}
+
+.tidal-social-panel .auth-button {
+  background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.tidal-social-panel .auth-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+/* Main Content */
+.tidal-social-panel .main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Tab Navigation */
+.tidal-social-panel .tab-nav {
+  display: flex;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.tidal-social-panel .tab-button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #aaa;
+  padding: 12px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tidal-social-panel .tab-button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tidal-social-panel .tab-button.active {
+  color: #00d4ff;
+  border-bottom-color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+}
+
+/* Tab Content */
+.tidal-social-panel .tab-content {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.tidal-social-panel .tab-content.active {
+  display: block;
+}
+
+/* Sections */
+.tidal-social-panel .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 8px 16px;
+}
+
+.tidal-social-panel .section-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Now Playing Section */
+.tidal-social-panel .now-playing-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tidal-social-panel .playing-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+  transition: background-color 0.3s ease;
+}
+
+.tidal-social-panel .playing-indicator.active {
+  background: #00d4ff;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+.tidal-social-panel .now-playing-card {
+  padding: 0 16px 16px 16px;
+}
+
+.tidal-social-panel .track-info {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tidal-social-panel .track-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.tidal-social-panel .track-artist {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 2px;
+}
+
+.tidal-social-panel .track-album {
+  font-size: 11px;
+  color: #777;
+}
+
+/* Activity Section */
+.tidal-social-panel .friends-activity-section {
+  flex: 1;
+}
+
+.tidal-social-panel .refresh-button {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.tidal-social-panel .refresh-button:hover {
+  color: #fff;
+}
+
+.tidal-social-panel .activity-list {
+  padding: 0 16px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tidal-social-panel .activity-item {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tidal-social-panel .activity-item:last-child {
+  border-bottom: none;
+}
+
+.tidal-social-panel .activity-track {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+.tidal-social-panel .activity-artist {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.tidal-social-panel .activity-time {
+  font-size: 10px;
+  color: #666;
+}
+
+/* Loading States */
+.tidal-social-panel .loading,
+.tidal-social-panel .error,
+.tidal-social-panel .empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+  font-size: 13px;
+}
+
+.tidal-social-panel .error {
+  color: #ff6b6b;
+}
+
+/* Scrollbar */
+.tidal-social-panel .activity-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tidal-social-panel .activity-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tidal-social-panel .activity-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.tidal-social-panel .activity-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tidal-social-panel {
+    width: 100vw;
+  }
+  
+  .tidal-social-toggle {
+    display: none; /* Hide toggle on mobile, use extension popup instead */
+  }
+}
+
+/* All old overlay styles have been removed and replaced with the new side panel styles above */
